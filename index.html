@@ -87,20 +87,43 @@
   </table>
 
   <script>
-    (function() {
-      const tbody = document.getElementById("product-tbody") || document.querySelector("#product-table tbody");
+    let productsData = [];
+    let sortAsc = true;
+    let nextId = 1;
+
+    function renderTable() {
+      const tbody = document.getElementById("product-tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      productsData.forEach((product, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${product.name}</td>
+          <td>${product.category}</td>
+          <td>${product.price}</td>
+          <td>${product.quantity}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function initializeApp() {
+      const tbody = document.getElementById("product-tbody");
       const btnAdd = document.getElementById("btn-add");
-      const thName = document.getElementById("th-name") || document.querySelector("th:nth-child(2)");
+      const thName = document.getElementById("th-name");
       const sortIndicator = document.getElementById("sort-indicator");
 
-      let productsData = [];
-      let sortAsc = true;
-      let nextId = 1;
+      if (!tbody || !btnAdd) {
+        console.error("Required elements not found");
+        return;
+      }
 
-      function loadProducts() {
-        const xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+      // Load products from JSON
+      const xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200 || xhr.status === 0) {
             try {
               productsData = JSON.parse(xhr.responseText);
               if (productsData.length > 0) {
@@ -109,43 +132,32 @@
               }
               renderTable();
             } catch (e) {
-              console.error(e);
+              console.error("Error parsing JSON:", e);
             }
+          } else {
+            console.error("Failed to load products.json, status:", xhr.status);
           }
-        };
-        xhr.open('GET', 'products.json', false);
-        xhr.send();
-      }
+        }
+      };
+      xhr.open('GET', 'products.json');
+      xhr.send();
 
-      function renderTable() {
-        tbody.innerHTML = "";
-        productsData.forEach((product, index) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${product.name}</td>
-            <td>${product.category}</td>
-            <td>${product.price}</td>
-            <td>${product.quantity}</td>
-          `;
-          tbody.appendChild(tr);
+      // Sort by name handler
+      if (thName) {
+        thName.addEventListener("click", function() {
+          if (sortAsc) {
+            productsData.sort((a, b) => a.name.localeCompare(b.name));
+            sortIndicator.textContent = "▲";
+          } else {
+            productsData.sort((a, b) => b.name.localeCompare(a.name));
+            sortIndicator.textContent = "▼";
+          }
+          sortAsc = !sortAsc;
+          renderTable();
         });
       }
 
-      loadProducts();
-
-      thName.addEventListener("click", function() {
-        if (sortAsc) {
-          productsData.sort((a, b) => a.name.localeCompare(b.name));
-          sortIndicator.textContent = "▲";
-        } else {
-          productsData.sort((a, b) => b.name.localeCompare(a.name));
-          sortIndicator.textContent = "▼";
-        }
-        sortAsc = !sortAsc;
-        renderTable();
-      });
-
+      // Add product handler
       btnAdd.addEventListener("click", function() {
         const nameInput = document.getElementById("input-name");
         const categoryInput = document.getElementById("input-category");
@@ -186,7 +198,14 @@
         priceInput.value = "";
         quantityInput.value = "";
       });
-    })();
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initializeApp);
+    } else {
+      initializeApp();
+    }
   </script>
 </body>
 </html>
