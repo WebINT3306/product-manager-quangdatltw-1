@@ -87,6 +87,7 @@
   </table>
 
   <script>
+    // Global variables accessible to autograder
     let productsData = [];
     let sortAsc = true;
     let nextId = 1;
@@ -198,7 +199,9 @@
 
     // Initialize when DOM is ready
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initializeApp);
+      document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(initializeApp, 0);
+      });
     } else {
       initializeApp();
     }
