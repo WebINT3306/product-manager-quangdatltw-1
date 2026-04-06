@@ -74,21 +74,23 @@
   <h2>Danh sách Sản phẩm</h2>
   <table id="product-table">
     <thead>
+      <tr>
         <th>STT</th>
         <th id="th-name">Tên sản phẩm <span id="sort-indicator"></span></th>
         <th>Danh mục</th>
         <th>Đơn giá</th>
         <th>Số lượng</th>
+      </tr>
     </thead>
     <tbody id="product-tbody">
     </tbody>
   </table>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const tbody = document.getElementById("product-tbody");
+    (function() {
+      const tbody = document.getElementById("product-tbody") || document.querySelector("#product-table tbody");
       const btnAdd = document.getElementById("btn-add");
-      const thName = document.getElementById("th-name");
+      const thName = document.getElementById("th-name") || document.querySelector("th:nth-child(2)");
       const sortIndicator = document.getElementById("sort-indicator");
 
       let productsData = [];
@@ -98,16 +100,20 @@
       function loadProducts() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            productsData = JSON.parse(xhr.responseText);
-            if (productsData.length > 0) {
-              const maxId = Math.max(...productsData.map(p => p.id));
-              nextId = maxId + 1;
+          if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+            try {
+              productsData = JSON.parse(xhr.responseText);
+              if (productsData.length > 0) {
+                const maxId = Math.max(...productsData.map(p => p.id));
+                nextId = maxId + 1;
+              }
+              renderTable();
+            } catch (e) {
+              console.error(e);
             }
-            renderTable();
           }
         };
-        xhr.open('GET', 'products.json');
+        xhr.open('GET', 'products.json', false);
         xhr.send();
       }
 
@@ -180,7 +186,7 @@
         priceInput.value = "";
         quantityInput.value = "";
       });
-    });
+    })();
   </script>
 </body>
 </html>
